@@ -363,7 +363,7 @@ export default function ReportCardsPage() {
           <CardContent className="p-8 space-y-6">
             {/* Header */}
             <div className="text-center border-b pb-4">
-              <h1 className="text-3xl font-extrabold text-blue-700 uppercase tracking-wider">Greenfield School</h1>
+              <h1 className="text-3xl font-extrabold text-blue-700 uppercase tracking-wider">Cloud School</h1>
               <p className="text-sm text-gray-600">Official Term Report Card</p>
             </div>
 
