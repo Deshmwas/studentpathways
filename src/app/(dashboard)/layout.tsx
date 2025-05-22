@@ -76,7 +76,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   ];
 
   return (
-    <div className="min-h-screen font-sans bg-gray-50">
+    <div className="min-h-screen font-sans bg-gray-50 flex flex-col">
       <header className="w-full bg-black text-white flex items-center justify-between px-6 py-4 shadow-sm">
         <div className="flex items-center gap-6">
           <Image src="/logo.png" alt="Logo" width={40} height={40} className="rounded-md object-cover" />
@@ -195,10 +195,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </header>
 
-      <div className="flex">
+      {/* Layout Body */}
+      <div className="flex flex-1 min-h-0 min-h-screen">
         <motion.aside
           animate={{ width: sidebarOpen ? 240 : 60 }}
-          className="bg-gray-900 text-white p-4 overflow-hidden transition-all duration-300"
+          className="bg-gray-900 text-white p-4 overflow-hidden transition-all duration-300 min-h-screen"
         >
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -224,7 +225,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </ul>
         </motion.aside>
 
-        <main className="flex-1 p-6 overflow-y-auto bg-gray-50">{children}</main>
+        <main className="flex-1 p-6 overflow-y-auto bg-gray-50 min-h-screen">
+          {children}
+        </main>
       </div>
     </div>
   );
