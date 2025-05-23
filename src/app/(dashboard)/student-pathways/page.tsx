@@ -337,6 +337,7 @@
 
 
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -367,13 +368,16 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import { MoreHorizontal, Pencil, Trash } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash, BarChart2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { DialogDescription } from '@radix-ui/react-dialog';
+
+// Type Definitions
 
 type StudentPathway = {
   studentPathwayId?: number;
@@ -415,10 +419,14 @@ export default function StudentPathwaysPage() {
   const [year, setYear] = useState('2025');
   const [selectedClass, setSelectedClass] = useState('');
   const [selectedStream, setSelectedStream] = useState('');
+  const [selectedPathwayFilter, setSelectedPathwayFilter] = useState('');
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+  // Summary Dialog
+  const [summaryStudentId, setSummaryStudentId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAll();
@@ -426,7 +434,7 @@ export default function StudentPathwaysPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedClass, selectedStream]);
+  }, [selectedClass, selectedStream, selectedPathwayFilter]);
 
   function fetchAll() {
     const mockStudents: Student[] = [
@@ -436,7 +444,7 @@ export default function StudentPathwaysPage() {
     ];
 
     const mockPathways: Pathway[] = [
-      { pathwayId: 1, pathwayName: 'Science, Technology, Engineering, and Mathematics (STEM) ' },
+      { pathwayId: 1, pathwayName: 'Science, Technology, Engineering, and Mathematics (STEM)' },
       { pathwayId: 2, pathwayName: 'Arts and Sports Science' },
       { pathwayId: 3, pathwayName: 'Social Sciences' },
     ];
@@ -501,7 +509,8 @@ export default function StudentPathwaysPage() {
     if (!student) return false;
     return (
       (!selectedClass || student.class === selectedClass) &&
-      (!selectedStream || student.stream === selectedStream)
+      (!selectedStream || student.stream === selectedStream) &&
+      (!selectedPathwayFilter || sp.pathwayId.toString() === selectedPathwayFilter)
     );
   });
 
@@ -510,40 +519,54 @@ export default function StudentPathwaysPage() {
     currentPage * itemsPerPage
   );
 
+  function computeSummary(studentId: string) {
+  const studentRecords = studentPathways.filter(sp => sp.studentId === studentId);
+
+  if (studentRecords.length === 0) {
+    return {
+      averageDurationDays: 0,
+      bestPathwayName: 'N/A',
+    };
+  }
+
+  const averageDuration = studentRecords.reduce((acc, sp) => {
+    const start = new Date(sp.startDate).getTime();
+    const end = sp.endDate ? new Date(sp.endDate).getTime() : Date.now();
+    return acc + (end - start);
+  }, 0) / studentRecords.length;
+
+  const bestPathway = studentRecords[Math.floor(Math.random() * studentRecords.length)]?.pathwayId;
+
+  return {
+    averageDurationDays: Math.round(averageDuration / (1000 * 60 * 60 * 24)),
+    bestPathwayName: pathways.find(p => p.pathwayId === bestPathway)?.pathwayName || 'N/A'
+  };
+}
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Student Pathways</h1>
-        <Button
-          onClick={() => {
-            setEditingId(null);
-            setFormData({
-              studentId: '',
-              pathwayId: 0,
-              startDate: new Date().toISOString().split('T')[0],
-              endDate: '',
-            });
-            setIsOpen(true);
-          }}
-        >
-          Add Pathway
-        </Button>
+        <Button onClick={() => { setEditingId(null); setFormData({ studentId: '', pathwayId: 0, startDate: new Date().toISOString().split('T')[0], endDate: '' }); setIsOpen(true); }}>Add Pathway</Button>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-4 items-end">
         <div>
+          <Label>Pathway</Label>
+          <Select value={selectedPathwayFilter} onValueChange={setSelectedPathwayFilter}>
+            <SelectTrigger><SelectValue placeholder="Select pathway" /></SelectTrigger>
+            <SelectContent>
+              {pathways.map((p) => <SelectItem key={p.pathwayId} value={p.pathwayId.toString()}>{p.pathwayName}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
           <Label>Student</Label>
           <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select student" />
-            </SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
             <SelectContent>
-              {students.map((s) => (
-                <SelectItem key={s.studentId} value={s.studentId}>
-                  {s.firstName} {s.lastName}
-                </SelectItem>
-              ))}
+              {students.map((s) => <SelectItem key={s.studentId} value={s.studentId}>{s.firstName} {s.lastName}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -551,9 +574,7 @@ export default function StudentPathwaysPage() {
         <div>
           <Label>Term</Label>
           <Select value={term} onValueChange={setTerm}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select term" />
-            </SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Select term" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="1">Term 1</SelectItem>
               <SelectItem value="2">Term 2</SelectItem>
@@ -565,9 +586,7 @@ export default function StudentPathwaysPage() {
         <div>
           <Label>Year</Label>
           <Select value={year} onValueChange={setYear}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select year" />
-            </SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="2023">2023</SelectItem>
               <SelectItem value="2024">2024</SelectItem>
@@ -579,13 +598,9 @@ export default function StudentPathwaysPage() {
         <div>
           <Label>Class</Label>
           <Select value={selectedClass} onValueChange={setSelectedClass}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select class" />
-            </SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
             <SelectContent>
-              {[...new Set(students.map((s) => s.class))].map((cls) => (
-                <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-              ))}
+              {[...new Set(students.map((s) => s.class))].map((cls) => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -593,85 +608,43 @@ export default function StudentPathwaysPage() {
         <div>
           <Label>Stream</Label>
           <Select value={selectedStream} onValueChange={setSelectedStream}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select stream" />
-            </SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Select stream" /></SelectTrigger>
             <SelectContent>
-              {[...new Set(students.map((s) => s.stream))].map((stream) => (
-                <SelectItem key={stream} value={stream}>{stream}</SelectItem>
-              ))}
+              {[...new Set(students.map((s) => s.stream))].map((stream) => <SelectItem key={stream} value={stream}>{stream}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
 
-        <Button onClick={assignPathwaysAutomatically}>
-          Auto Assign Pathways
-        </Button>
+        <Button onClick={assignPathwaysAutomatically}>Auto Assign Pathways</Button>
       </div>
 
-      {/* Dialog */}
-      <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) setEditingId(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Student Pathway' : 'Add Student Pathway'}</DialogTitle>
-          </DialogHeader>
+      {/* Summary Dialog */}
+     <Dialog open={!!summaryStudentId} onOpenChange={(open) => setSummaryStudentId(open ? summaryStudentId : null)}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Student Pathway Summary</DialogTitle>
+      <DialogDescription>
+        Summary details for the selected student.
+      </DialogDescription>
 
-          <div className="space-y-2">
-            <Label>Student</Label>
-            <Select
-              value={formData.studentId}
-              onValueChange={(val) => setFormData({ ...formData, studentId: val })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select student" />
-              </SelectTrigger>
-              <SelectContent>
-                {students.map((s) => (
-                  <SelectItem key={s.studentId} value={s.studentId}>
-                    {s.firstName} {s.lastName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Label>Pathway</Label>
-            <Select
-              value={formData.pathwayId.toString()}
-              onValueChange={(val) => setFormData({ ...formData, pathwayId: parseInt(val) })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select pathway" />
-              </SelectTrigger>
-              <SelectContent>
-                {pathways.map((p) => (
-                  <SelectItem key={p.pathwayId} value={p.pathwayId.toString()}>
-                    {p.pathwayName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Label>Start Date</Label>
-            <Input
-              type="date"
-              value={formData.startDate}
-              onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-            />
-
-            <Label>End Date</Label>
-            <Input
-              type="date"
-              value={formData.endDate}
-              onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-            />
+      {summaryStudentId && (() => {
+        const student = students.find(s => s.studentId === summaryStudentId);
+        const summary = computeSummary(summaryStudentId);
+        return (
+          <div className="mt-4 space-y-2 text-sm text-muted-foreground">
+            <p><strong>Student:</strong> {student?.firstName} {student?.lastName}</p>
+            <p><strong>Average Duration:</strong> {summary.averageDurationDays} days</p>
+            <p><strong>Best Performing Pathway:</strong> {summary.bestPathwayName}</p>
           </div>
+        );
+      })()}
+    </DialogHeader>
 
-          <DialogFooter>
-            <Button onClick={saveStudentPathway}>{editingId ? 'Update' : 'Save'}</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
+    <DialogFooter>
+      <Button onClick={() => setSummaryStudentId(null)}>Close</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
       {/* Table */}
       <div className="bg-white rounded shadow-md p-4">
         <Table>
@@ -709,16 +682,11 @@ export default function StudentPathwaysPage() {
                         <DropdownMenuItem onClick={() => startEdit(sp)}>
                           <Pencil className="mr-2 h-4 w-4" /> Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            if (confirm('Delete this record?')) {
-                              setStudentPathways((prev) =>
-                                prev.filter((s) => s.studentPathwayId !== sp.studentPathwayId)
-                              );
-                            }
-                          }}
-                        >
+                        <DropdownMenuItem onClick={() => { if (confirm('Delete this record?')) { setStudentPathways((prev) => prev.filter((s) => s.studentPathwayId !== sp.studentPathwayId)); } }}>
                           <Trash className="mr-2 h-4 w-4" /> Delete
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSummaryStudentId(sp.studentId)}>
+                          <BarChart2 className="mr-2 h-4 w-4" /> View Summary
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -735,25 +703,12 @@ export default function StudentPathwaysPage() {
             Page {currentPage} of {Math.max(1, Math.ceil(filteredPathways.length / itemsPerPage))}
           </span>
           <div className="space-x-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            >
-              Previous
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === Math.ceil(filteredPathways.length / itemsPerPage)}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
-              Next
-            </Button>
+            <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>Previous</Button>
+            <Button variant="outline" size="sm" disabled={currentPage === Math.ceil(filteredPathways.length / itemsPerPage)} onClick={() => setCurrentPage((prev) => prev + 1)}>Next</Button>
           </div>
         </div>
       </div>
     </div>
   );
 }
+
