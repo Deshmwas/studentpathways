@@ -206,6 +206,9 @@
 // }
 
 
+
+
+
 "use client";
 
 import { useRef, useState, useEffect } from "react";
@@ -216,12 +219,15 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { createRoot } from "react-dom/client";
 
 interface Student {
   studentId: string;
   firstName: string;
   lastName: string;
   admissionNumber: string;
+  className: string;
+  stream: string;
 }
 
 interface ReportCard {
@@ -244,92 +250,169 @@ interface ReportCard {
   } | null;
 }
 
+function ReportCardContent({ reportCard }: { reportCard: ReportCard }) {
+  return (
+    <Card className="bg-white text-gray-900 p-10 w-[794px] shadow-md border">
+      <CardContent className="space-y-6 text-sm bg-white">
+        <div className="text-center space-y-1 border-b pb-4">
+          <h1 className="text-2xl font-bold uppercase text-blue-700">Demo School - Main Campus (CBC)</h1>
+          <p>P.O. BOX 11377 Nairobi</p>
+          <p>254733895871 | info@africacloudspace.com</p>
+          <p className="text-lg font-semibold uppercase mt-2">Opener Exams</p>
+          <h2 className="text-xl font-bold underline">Academic Report Card</h2>
+        </div>
+
+        <div className="text-center space-y-1">
+          <p><strong>Learner's Name:</strong> {reportCard.student.firstName} {reportCard.student.lastName}</p>
+          <p><strong>Class Name:</strong> {reportCard.student.className}</p>
+          <p><strong>Stream:</strong> {reportCard.student.stream}</p>
+          <p><strong>ADM No:</strong> {reportCard.student.admissionNumber}</p>
+        </div>
+
+        <div className="text-center space-y-1 border-t pt-4">
+          <p><strong>Overall Score:</strong> {reportCard.totalScore}</p>
+          <p><strong>Percentage:</strong> {reportCard.meanScore}</p>
+          <p><strong>Grade:</strong> {reportCard.grade}</p>
+          <div className="mt-2">
+            <h3 className="font-semibold underline">Marks Range Grade</h3>
+            <div className="flex justify-center space-x-6 text-sm mt-1">
+              <p>0 - 30: <strong>BE</strong></p>
+              <p>31 - 49: <strong>AE</strong></p>
+              <p>50 - 75: <strong>ME</strong></p>
+              <p>76 - 100: <strong>EE</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h3 className="text-lg font-semibold border-b mb-2">Learner's Performance</h3>
+          <table className="w-full border table-auto text-left text-sm">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="border px-2 py-1">Subject</th>
+                <th className="border px-2 py-1">Marks</th>
+                <th className="border px-2 py-1">Points</th>
+                <th className="border px-2 py-1">Grade</th>
+                <th className="border px-2 py-1">Comment</th>
+              </tr>
+            </thead>
+            <tbody>
+              {["CRE", "Creative Activities", "Kiswahili", "Mathematics"].map((subject, i) => (
+                <tr key={i}>
+                  <td className="border px-2 py-1">{subject}</td>
+                  <td className="border px-2 py-1">{Math.floor(Math.random() * 30 + 70)}</td>
+                  <td className="border px-2 py-1">4</td>
+                  <td className="border px-2 py-1">EE</td>
+                  <td className="border px-2 py-1">Exceeding Expectations</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div>
+          <h3 className="font-semibold text-lg border-b mb-2">Pathway</h3>
+          <p><strong>Suggested Pathway:</strong> Science and Technology</p>
+          <p><strong>Strength:</strong> Logical reasoning, numerical aptitude</p>
+          <p><strong>Support Needs:</strong> Foster innovation via project-based learning</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 border-t pt-4">
+          <div>
+            <h4 className="font-semibold">Class Teacher Remarks</h4>
+            <p>Name: _______________________</p>
+          </div>
+          <div>
+            <h4 className="font-semibold">Principal/Headteacher Remarks</h4>
+            <p>Name: _______________________</p>
+          </div>
+        </div>
+
+        <p className="mt-4 text-sm text-gray-600 text-center">
+          Closing Date: ______________________ | Next term re-opens on: ______________________
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function ReportCardsPage() {
   const [students, setStudents] = useState<Student[]>([]);
-  const [studentId, setStudentId] = useState("");
   const [term, setTerm] = useState("1");
   const [year, setYear] = useState(new Date().getFullYear());
-  const [reportCard, setReportCard] = useState<ReportCard | null>(null);
-  const reportRef = useRef<HTMLDivElement>(null);
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedStream, setSelectedStream] = useState("");
 
   useEffect(() => {
-    const mockStudents: Student[] = [
-      { studentId: "1", firstName: "Alice", lastName: "Johnson", admissionNumber: "ADM001" },
-      { studentId: "2", firstName: "Bob", lastName: "Smith", admissionNumber: "ADM002" },
-      { studentId: "3", firstName: "Charlie", lastName: "Brown", admissionNumber: "ADM003" },
-    ];
-    setStudents(mockStudents);
+    setStudents([
+      { studentId: "1", firstName: "Alice", lastName: "Johnson", admissionNumber: "ADM001", className: "Grade 1", stream: "A" },
+      { studentId: "2", firstName: "Bob", lastName: "Smith", admissionNumber: "ADM002", className: "Grade 1", stream: "A" },
+      { studentId: "3", firstName: "Charlie", lastName: "Brown", admissionNumber: "ADM003", className: "Grade 1", stream: "B" },
+    ]);
   }, []);
 
-  const fetchReportCard = async () => {
-    if (!studentId) {
-      toast.error("Please select a student.");
-      return;
+  const filteredStudents = students.filter((s) => {
+    return (
+      (!selectedClass || s.className === selectedClass) &&
+      (!selectedStream || s.stream === selectedStream)
+    );
+  });
+
+  const generateBatchReports = async () => {
+    const container = document.createElement("div");
+    container.style.position = "absolute";
+    container.style.top = "-9999px";
+    document.body.appendChild(container);
+
+    for (const student of filteredStudents) {
+      const reportCard: ReportCard = {
+        totalScore: 420,
+        meanScore: 84,
+        grade: "A",
+        student,
+        behavioralAttribute: {
+          discipline: "Excellent",
+          participation: "Active",
+          teamwork: "Cooperative",
+          creativity: "Very Creative",
+          comments: "Shows great enthusiasm and leadership."
+        },
+        teacherComment: {
+          comment: "Keep up the great work!"
+        },
+        principalComment: {
+          comment: "An outstanding performance this term."
+        }
+      };
+
+      const tempDiv = document.createElement("div");
+      container.appendChild(tempDiv);
+      const root = createRoot(tempDiv);
+      root.render(<ReportCardContent reportCard={reportCard} />);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const canvas = await html2canvas(tempDiv, { backgroundColor: "#ffffff" });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const imgProps = pdf.getImageProperties(imgData);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`report-card-${student.firstName}-${student.lastName}.pdf`);
+
+      root.unmount();
+      tempDiv.remove();
     }
 
-    const selectedStudent = students.find((s) => s.studentId === studentId);
-    if (!selectedStudent) return;
-
-    const mockReportCard: ReportCard = {
-      totalScore: 420,
-      meanScore: 84,
-      grade: "A",
-      student: selectedStudent,
-      behavioralAttribute: {
-        discipline: "Excellent",
-        participation: "Active",
-        teamwork: "Cooperative",
-        creativity: "Very Creative",
-        comments: "Shows great enthusiasm and leadership.",
-      },
-      teacherComment: {
-        comment: "Keep up the great work!",
-      },
-      principalComment: {
-        comment: "An outstanding performance this term.",
-      },
-    };
-
-    setReportCard(mockReportCard);
-    toast.success("Mock report generated.");
-  };
-
-  const downloadPDF = async () => {
-    if (!reportRef.current) return;
-
-    const canvas = await html2canvas(reportRef.current);
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF("p", "mm", "a4");
-    const imgProps = pdf.getImageProperties(imgData);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-    pdf.save(`report-card-${term}-${year}.pdf`);
+    container.remove();
+    toast.success("Batch reports generated.");
   };
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <h2 className="text-2xl font-bold">Generate Report Card</h2>
+      <h2 className="text-2xl font-bold">Report Card Generator</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <Label>Student</Label>
-          <select
-            className="w-full border rounded px-2 py-1"
-            value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
-          >
-            <option value="">Select student</option>
-            {students.map((s) => (
-              <option key={s.studentId} value={s.studentId}>
-                {s.firstName} {s.lastName}
-              </option>
-            ))}
-          </select>
-        </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <Label>Term</Label>
           <select
@@ -342,7 +425,6 @@ export default function ReportCardsPage() {
             <option value="3">Term 3</option>
           </select>
         </div>
-
         <div>
           <Label>Year</Label>
           <Input
@@ -351,110 +433,58 @@ export default function ReportCardsPage() {
             onChange={(e) => setYear(Number(e.target.value))}
           />
         </div>
+        <div>
+          <Label>Class</Label>
+          <select
+            className="w-full border rounded px-2 py-1"
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value)}
+          >
+            <option value="">All</option>
+            <option value="Grade 1">Grade 1</option>
+          </select>
+        </div>
+        <div>
+          <Label>Stream</Label>
+          <select
+            className="w-full border rounded px-2 py-1"
+            value={selectedStream}
+            onChange={(e) => setSelectedStream(e.target.value)}
+          >
+            <option value="">All</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+          </select>
+        </div>
       </div>
 
-      <div className="flex gap-4 mt-4">
-        <Button onClick={fetchReportCard}>Generate</Button>
-        {reportCard && <Button onClick={downloadPDF}>Download as PDF</Button>}
+      <Button onClick={generateBatchReports}>Download All PDF Reports</Button>
+
+      <div className="space-y-8 mt-8">
+        {filteredStudents.map((student) => {
+          const reportCard: ReportCard = {
+            totalScore: 420,
+            meanScore: 84,
+            grade: "A",
+            student,
+            behavioralAttribute: {
+              discipline: "Excellent",
+              participation: "Active",
+              teamwork: "Cooperative",
+              creativity: "Very Creative",
+              comments: "Shows great enthusiasm and leadership."
+            },
+            teacherComment: {
+              comment: "Keep up the great work!"
+            },
+            principalComment: {
+              comment: "An outstanding performance this term."
+            }
+          };
+
+          return <ReportCardContent key={student.studentId} reportCard={reportCard} />;
+        })}
       </div>
-
-      {reportCard && (
-        <Card ref={reportRef} className="bg-white text-gray-800 mt-6 shadow-lg border border-gray-300">
-   <CardContent ref={reportRef} className="bg-white text-gray-900 p-10 space-y-6 text-sm shadow-lg border border-gray-300">
-  {/* School Header */}
-  <div className="text-center space-y-1 border-b pb-4">
-    <h1 className="text-2xl font-bold uppercase text-blue-700">Demo School - Main Campus (CBC)</h1>
-    <p>P.O. BOX 11377 Nairobi</p>
-    <p>254733895871 | info@africacloudspace.com</p>
-    <p className="text-lg font-semibold uppercase mt-2">Opener Exams</p>
-    <h2 className="text-xl font-bold underline">Academic Report Card</h2>
-  </div>
-
-  {/* General Info - centered */}
-  <div className="text-center space-y-1">
-    <p><strong>Learner's Name:</strong> {reportCard.student.firstName} {reportCard.student.lastName}</p>
-    <p><strong>Class Name:</strong> Grade 1 - A</p>
-    <p><strong>ADM No:</strong> {reportCard.student.admissionNumber}</p>
-    <p><strong>Year - Term:</strong> {year} - Term {term}</p>
-  </div>
-
-  {/* Performance Metrics - centered */}
-  <div className="text-center space-y-1 border-t pt-4">
-    <p><strong>Overall Score:</strong> {reportCard.totalScore}</p>
-    <p><strong>Percentage:</strong> {reportCard.meanScore}</p>
-    <p><strong>Grade:</strong> {reportCard.grade}</p>
-    <div className="mt-2">
-      <h3 className="font-semibold underline">Marks Range Grade</h3>
-      <div className="flex justify-center space-x-6 text-sm mt-1">
-        <p>0 - 30: <strong>BE</strong></p>
-        <p>31 - 49: <strong>AE</strong></p>
-        <p>50 - 75: <strong>ME</strong></p>
-        <p>76 - 100: <strong>EE</strong></p>
-      </div>
-    </div>
-  </div>
-
-  {/* Learner's Performance */}
-  <div>
-    <h3 className="text-lg font-semibold border-b mb-2">Learner's Performance</h3>
-    <table className="w-full border table-auto text-left text-sm">
-      <thead className="bg-gray-100">
-        <tr>
-          <th className="border px-2 py-1">Subject</th>
-          <th className="border px-2 py-1">Marks</th>
-          <th className="border px-2 py-1">Points</th>
-          <th className="border px-2 py-1">Grade</th>
-          <th className="border px-2 py-1">Comment</th>
-        </tr>
-      </thead>
-      <tbody>
-        {[
-          { subject: "Christian Religious Education", marks: 80 },
-          { subject: "Creative Activities", marks: 90 },
-          { subject: "Kiswahili", marks: 86 },
-          { subject: "Mathematics", marks: 99 },
-        ].map(({ subject, marks }, i) => (
-          <tr key={i}>
-            <td className="border px-2 py-1">{subject}</td>
-            <td className="border px-2 py-1">{marks}</td>
-            <td className="border px-2 py-1">4</td>
-            <td className="border px-2 py-1">EE</td>
-            <td className="border px-2 py-1">Exceeding Expectations</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-
-  {/* Pathway Section */}
-  <div>
-    <h3 className="font-semibold text-lg border-b mb-2">Pathway</h3>
-    <p><strong>Suggested Pathway:</strong> Science and Technology</p>
-    <p><strong>Strength:</strong> Logical reasoning, numerical aptitude</p>
-    <p><strong>Support Needs:</strong> Foster innovation via project-based learning</p>
-  </div>
-
-  {/* Remarks */}
-  <div className="grid grid-cols-2 gap-4 border-t pt-4">
-    <div>
-      <h4 className="font-semibold">Class Teacher Remarks</h4>
-      <p>Name: _______________________</p>
-    </div>
-    <div>
-      <h4 className="font-semibold">Principal/Headteacher Remarks</h4>
-      <p>Name: _______________________</p>
-    </div>
-  </div>
-
-  {/* Footer */}
-  <p className="mt-4 text-sm text-gray-600 text-center">
-    Closing Date: ______________________ | Next term re-opens on: ______________________
-  </p>
-</CardContent>
-
-
-        </Card>
-      )}
     </div>
   );
 }
