@@ -645,6 +645,65 @@ export default function StudentPathwaysPage() {
     </DialogFooter>
   </DialogContent>
 </Dialog>
+
+       <Dialog open={isOpen} onOpenChange={(open) => {
+  if (!open) {
+    setIsOpen(false);
+    setFormData({
+      studentId: '',
+      pathwayId: 0,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: '',
+    });
+    setEditingId(null);
+  }
+}}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>{editingId ? 'Edit Pathway Assignment' : 'Add Pathway Assignment'}</DialogTitle>
+    </DialogHeader>
+    <div className="space-y-4">
+      <div>
+        <Label>Student</Label>
+        <Select value={formData.studentId} onValueChange={(val) => setFormData({ ...formData, studentId: val })}>
+          <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
+          <SelectContent>
+            {students.map((s) => (
+              <SelectItem key={s.studentId} value={s.studentId}>
+                {s.firstName} {s.lastName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Pathway</Label>
+        <Select value={formData.pathwayId.toString()} onValueChange={(val) => setFormData({ ...formData, pathwayId: parseInt(val) })}>
+          <SelectTrigger><SelectValue placeholder="Select pathway" /></SelectTrigger>
+          <SelectContent>
+            {pathways.map((p) => (
+              <SelectItem key={p.pathwayId} value={p.pathwayId.toString()}>
+                {p.pathwayName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label>Start Date</Label>
+        <Input type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
+      </div>
+      <div>
+        <Label>End Date</Label>
+        <Input type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
+      </div>
+    </div>
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+      <Button onClick={saveStudentPathway}>{editingId ? 'Update' : 'Add'}</Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
       {/* Table */}
       <div className="bg-white rounded shadow-md p-4">
         <Table>
