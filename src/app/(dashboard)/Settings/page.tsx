@@ -23,16 +23,15 @@ export default function SettingsPage() {
   const [selectedExamId, setSelectedExamId] = useState<string>('');
   const [exams, setExams] = useState<Exam[]>([]);
 
-  // Load dummy exams on mount
   useEffect(() => {
     const dummyExams: Exam[] = [
-      { id: 'exam_001', name: 'Opening Term Exam', term: 'Term 1', year: 2024 },
-      { id: 'exam_002', name: 'Mid Term Exam', term: 'Term 2', year: 2024 },
-      { id: 'exam_003', name: 'End Term Exam', term: 'Term 3', year: 2024 },
-      { id: 'exam_004', name: 'Final Exam', term: 'Term 3', year: 2023 },
+      { id: 'exam_001', name: 'Opening Term Exam', term: 'Term 1', year: 2025 },
+      { id: 'exam_002', name: 'Mid Term Exam', term: 'Term 2', year: 2025 },
+      { id: 'exam_003', name: 'End Term Exam', term: 'Term 3', year: 2025 },
+      { id: 'exam_004', name: 'Final Exam', term: 'Term 3', year: 2025 },
     ];
     setExams(dummyExams);
-    setSelectedExamId(dummyExams[0].id); // Default to first exam
+    setSelectedExamId(dummyExams[0].id);
   }, []);
 
   const handleSave = () => {
@@ -47,37 +46,62 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6">
-      <h1 className="text-2xl font-bold mb-6">Pathway Settings</h1>
+    <div className="max-w-2xl mx-auto p-6 bg-white rounded-xl shadow-md">
+      <h1 className="text-3xl font-bold mb-6">Pathway Settings</h1>
 
-      <div className="space-y-4">
-        <label className="block font-medium">Determine Pathway By:</label>
-        <select
-          value={mode}
-          onChange={(e) => setMode(e.target.value as PathwayDeterminationMode)}
-          className="border p-2 rounded w-full"
-        >
-          <option value="YEAR_AVERAGE">Year Average</option>
-          <option value="ALL_TIME_AVERAGE">All-Time Average</option>
-          <option value="SPECIFIC_EXAM">Specific Exam</option>
-        </select>
+      <div className="space-y-6">
+        <div>
+          <label className="block font-semibold mb-2">Determine Pathway By:</label>
+          <div className="flex flex-col space-y-2">
+            <label className="inline-flex items-center space-x-2">
+              <input
+                type="radio"
+                value="YEAR_AVERAGE"
+                checked={mode === 'YEAR_AVERAGE'}
+                onChange={() => setMode('YEAR_AVERAGE')}
+                className="accent-black"
+              />
+              <span>Year Average</span>
+            </label>
+            <label className="inline-flex items-center space-x-2">
+              <input
+                type="radio"
+                value="ALL_TIME_AVERAGE"
+                checked={mode === 'ALL_TIME_AVERAGE'}
+                onChange={() => setMode('ALL_TIME_AVERAGE')}
+                className="accent-black"
+              />
+              <span>All-Time Average</span>
+            </label>
+            <label className="inline-flex items-center space-x-2">
+              <input
+                type="radio"
+                value="SPECIFIC_EXAM"
+                checked={mode === 'SPECIFIC_EXAM'}
+                onChange={() => setMode('SPECIFIC_EXAM')}
+                className="accent-black"
+              />
+              <span>Specific Exam</span>
+            </label>
+          </div>
+        </div>
 
         {mode === 'YEAR_AVERAGE' && (
           <div>
-            <label className="block mt-2">Select Year:</label>
+            <label className="block font-medium mb-1">Select Year:</label>
             <input
               type="number"
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
               className="border p-2 rounded w-full"
-              placeholder="Enter year (e.g. 2024)"
+              placeholder="Enter year (e.g. 2025)"
             />
           </div>
         )}
 
         {mode === 'SPECIFIC_EXAM' && (
           <div>
-            <label className="block mt-2">Select Exam:</label>
+            <label className="block font-medium mb-1">Select Exam:</label>
             <select
               value={selectedExamId}
               onChange={(e) => setSelectedExamId(e.target.value)}
@@ -94,7 +118,7 @@ export default function SettingsPage() {
 
         <button
           onClick={handleSave}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4"
+          className="bg-black text-white px-6 py-2 rounded hover:bg-gray-900 transition-all"
         >
           Save Settings
         </button>
