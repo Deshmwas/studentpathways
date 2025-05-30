@@ -705,34 +705,6 @@ export default function StudentPathwaysPage() {
   </DialogContent>
 </Dialog>
 
-{/* Summary Dialog */}
-      {/* <Dialog
-        open={!!summaryStudentId}
-        onOpenChange={(open) => setSummaryStudentId(open ? summaryStudentId : null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Student Pathway Summary</DialogTitle>
-            <DialogDescription>
-              Summary details for the selected student.
-            </DialogDescription>
-            {summaryStudentId && (() => {
-              const student = students.find(s => s.studentId === summaryStudentId);
-              const summary = computeSummary(summaryStudentId);
-              return (
-                <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-                  <p><strong>Student:</strong> {student?.firstName} {student?.lastName}</p>
-                  <p><strong>Average Duration:</strong> {summary.averageDurationDays} days</p>
-                  <p><strong>Best Performing Pathway:</strong> {summary.bestPathwayName}</p>
-                </div>
-              );
-            })()}
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={() => setSummaryStudentId(null)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog> */}
       {/* Table */}
       <div className="bg-white rounded shadow-md p-4">
         <Table>
@@ -799,3 +771,9 @@ export default function StudentPathwaysPage() {
     </div>
   );
 }
+
+
+
+
+
+
