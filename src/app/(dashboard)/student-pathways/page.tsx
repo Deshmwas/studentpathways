@@ -377,6 +377,19 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import PathwayFormDialog from "@/components/PathwayFormDialog";
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import { FileSpreadsheet } from 'lucide-react'; 
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+
 
 // Type Definitions
 type StudentPathway = {
@@ -569,7 +582,31 @@ export default function StudentPathwaysPage() {
     currentPage * itemsPerPage
   );
 
+  function exportToExcel() {
+  const exportData = paginatedPathways.map((sp) => {
+    const student = students.find((s) => s.studentId === sp.studentId);
+    const pathway = pathways.find((p) => p.pathwayId === sp.pathwayId);
 
+    return {
+      'Student Name': student ? `${student.firstName} ${student.lastName}` : 'Unknown',
+      'Class': student?.class || '',
+      'Stream': student?.stream || '',
+      'Pathway': pathway?.pathwayName || 'Unknown',
+      'Start Date': sp.startDate,
+      'End Date': sp.endDate || '',
+      'Automatic?': sp.isAutomatic ? 'Yes' : 'No',
+      'Overridden?': sp.isOverride ? 'Yes' : 'No',
+    };
+  });
+
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Student Pathways');
+
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+  saveAs(blob, 'student-pathways.xlsx');
+}
   function computeSummary(studentId: string) {
   const studentRecords = studentPathways.filter(sp => sp.studentId === studentId);
 
@@ -669,7 +706,6 @@ export default function StudentPathwaysPage() {
 
         <Button onClick={assignPathwaysAutomatically}>Auto Assign Pathways</Button>
       </div>
-
       {/* Summary Dialog */}
      <Dialog open={!!summaryStudentId} onOpenChange={(open) => setSummaryStudentId(open ? summaryStudentId : null)}>
   <DialogContent>
@@ -757,60 +793,19 @@ export default function StudentPathwaysPage() {
   </DialogContent>
 </Dialog>
 
-      {/* Table */}
-      {/* <div className="bg-white rounded shadow-md p-4">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>#</TableHead>
-              <TableHead>Student</TableHead>
-              <TableHead>Pathway</TableHead>
-              <TableHead>Start Date</TableHead>
-              <TableHead>End Date</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {paginatedPathways.map((sp, index) => {
-              const student = students.find((s) => s.studentId === sp.studentId);
-              const studentName = student ? `${student.firstName} ${student.lastName}` : 'Unknown';
-              const pathway = pathways.find((p) => p.pathwayId === sp.pathwayId)?.pathwayName || 'Unknown';
-
-              return (
-                <TableRow key={sp.studentPathwayId}>
-                  <TableCell>{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
-                  <TableCell>{studentName}</TableCell>
-                  <TableCell>{pathway}</TableCell>
-                  <TableCell>{sp.startDate ? format(new Date(sp.startDate), 'dd MMM yyyy') : '-'}</TableCell>
-                  <TableCell>{sp.endDate ? format(new Date(sp.endDate), 'dd MMM yyyy') : '-'}</TableCell>
-                  <TableCell className="text-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => startEdit(sp)}>
-                          <Pencil className="mr-2 h-4 w-4" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => { if (confirm('Delete this record?')) { setStudentPathways((prev) => prev.filter((s) => s.studentPathwayId !== sp.studentPathwayId)); } }}>
-                          <Trash className="mr-2 h-4 w-4" /> Delete
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => setSummaryStudentId(sp.studentId)}>
-                          <BarChart2 className="mr-2 h-4 w-4" /> View Summary
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table> */}
-
-
+  {/* TABLE */}
   <div className="bg-white rounded shadow-md p-4">
+
+    <div className="flex justify-between items-center mb-2">
+    <h2 className="text-lg font-semibold">Student Pathways</h2>
+    <button
+      onClick={exportToExcel}
+      title="Export to Excel"
+      className="text-green-600 hover:text-green-800 transition-colors"
+    >
+      <FileSpreadsheet className="w-5 h-5" />
+    </button>
+  </div>
   <Table>
     <TableHeader>
       <TableRow>
@@ -895,17 +890,79 @@ export default function StudentPathwaysPage() {
       })}
     </TableBody>
   </Table>
+         {/* Pagination Controls */}
+<Pagination className="mt-4">
+  <PaginationContent>
+    <PaginationItem>
+      <PaginationPrevious
+        href="#"
+        onClick={(e) => {
+          e.preventDefault();
+          setCurrentPage((prev) => Math.max(prev - 1, 1));
+        }}
+        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+      />
+    </PaginationItem>
 
-        {/* Pagination Controls */}
-        <div className="flex justify-between items-center mt-4">
-          <span className="text-sm text-gray-600">
-            Page {currentPage} of {Math.max(1, Math.ceil(filteredPathways.length / itemsPerPage))}
-          </span>
-          <div className="space-x-2">
-            <Button variant="outline" size="sm" disabled={currentPage === 1} onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}>Previous</Button>
-            <Button variant="outline" size="sm" disabled={currentPage === Math.ceil(filteredPathways.length / itemsPerPage)} onClick={() => setCurrentPage((prev) => prev + 1)}>Next</Button>
-          </div>
-        </div>
+    {/* Show 3 page numbers: previous, current, next */}
+    {currentPage > 1 && (
+      <PaginationItem>
+        <PaginationLink
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            setCurrentPage(currentPage - 1);
+          }}
+        >
+          {currentPage - 1}
+        </PaginationLink>
+      </PaginationItem>
+    )}
+
+    <PaginationItem>
+      <PaginationLink href="#" isActive>
+        {currentPage}
+      </PaginationLink>
+    </PaginationItem>
+
+    {currentPage < Math.ceil(filteredPathways.length / itemsPerPage) && (
+      <PaginationItem>
+        <PaginationLink
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            setCurrentPage(currentPage + 1);
+          }}
+        >
+          {currentPage + 1}
+        </PaginationLink>
+      </PaginationItem>
+    )}
+
+    {currentPage + 1 < Math.ceil(filteredPathways.length / itemsPerPage) && (
+      <PaginationItem>
+        <PaginationEllipsis />
+      </PaginationItem>
+    )}
+
+    <PaginationItem>
+      <PaginationNext
+        href="#"
+        onClick={(e) => {
+          e.preventDefault();
+          setCurrentPage((prev) =>
+            Math.min(prev + 1, Math.ceil(filteredPathways.length / itemsPerPage))
+          );
+        }}
+        className={
+          currentPage === Math.ceil(filteredPathways.length / itemsPerPage)
+            ? "pointer-events-none opacity-50"
+            : ""
+        }
+      />
+    </PaginationItem>
+  </PaginationContent>
+</Pagination>
       </div>
     </div>
   );
