@@ -601,9 +601,12 @@ function PathwayReportContent({ pathwayReport }: { pathwayReport: PathwayReport 
           </div>
         </div>
 
-        <p className="mt-4 text-sm text-gray-600 text-center">
+        {/* <p className="mt-4 text-sm text-gray-600 text-center">
           Date of Report: {new Date().toLocaleDateString('en-KE')}
-        </p>
+        </p> */}
+        <p className="mt-4 text-sm text-gray-600 text-center">
+        Closing Date: ______________________ | Next term re-opens on: ______________________
+       </p>
       </CardContent>
     </Card>
   );

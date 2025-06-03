@@ -542,6 +542,7 @@ export default function StudentPathwaysPage() {
     bestPathwayName: pathways.find(p => p.pathwayId === bestPathway)?.pathwayName || 'N/A'
   };
 }
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
