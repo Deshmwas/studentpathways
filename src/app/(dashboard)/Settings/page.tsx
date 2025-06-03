@@ -147,18 +147,9 @@ export interface Exam {
   year: number;
 }
 
-let mockSettings: PathwaySettings = {
-  mode: 'YEAR_AVERAGE',
-  selectedYear: new Date().getFullYear()
-};
-
-export function getMockSettings(): PathwaySettings {
-  return mockSettings;
-}
-
 export default function SettingsPage() {
   const [mode, setMode] = useState<PathwayDeterminationMode>('YEAR_AVERAGE');
-  const [selectedYear, setSelectedYear] = useState<number>(2025);
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [selectedExamId, setSelectedExamId] = useState<string>('');
   const [exams, setExams] = useState<Exam[]>([]);
 
@@ -173,11 +164,12 @@ export default function SettingsPage() {
   }, []);
 
   const handleSave = () => {
-    mockSettings = {
+    const mockSettings: PathwaySettings = {
       mode,
       ...(mode === 'YEAR_AVERAGE' && { selectedYear }),
       ...(mode === 'SPECIFIC_EXAM' && { selectedExamId }),
     };
+    console.log('Mock Settings Saved:', mockSettings);
     alert('✅ Pathway settings saved (mock)');
   };
 
@@ -190,15 +182,33 @@ export default function SettingsPage() {
           <label className="block font-semibold mb-2">Determine Pathway By:</label>
           <div className="flex flex-col space-y-2">
             <label className="inline-flex items-center space-x-2">
-              <input type="radio" value="YEAR_AVERAGE" checked={mode === 'YEAR_AVERAGE'} onChange={() => setMode('YEAR_AVERAGE')} className="accent-black" />
+              <input
+                type="radio"
+                value="YEAR_AVERAGE"
+                checked={mode === 'YEAR_AVERAGE'}
+                onChange={() => setMode('YEAR_AVERAGE')}
+                className="accent-black"
+              />
               <span>Year Average</span>
             </label>
             <label className="inline-flex items-center space-x-2">
-              <input type="radio" value="ALL_TIME_AVERAGE" checked={mode === 'ALL_TIME_AVERAGE'} onChange={() => setMode('ALL_TIME_AVERAGE')} className="accent-black" />
+              <input
+                type="radio"
+                value="ALL_TIME_AVERAGE"
+                checked={mode === 'ALL_TIME_AVERAGE'}
+                onChange={() => setMode('ALL_TIME_AVERAGE')}
+                className="accent-black"
+              />
               <span>All-Time Average</span>
             </label>
             <label className="inline-flex items-center space-x-2">
-              <input type="radio" value="SPECIFIC_EXAM" checked={mode === 'SPECIFIC_EXAM'} onChange={() => setMode('SPECIFIC_EXAM')} className="accent-black" />
+              <input
+                type="radio"
+                value="SPECIFIC_EXAM"
+                checked={mode === 'SPECIFIC_EXAM'}
+                onChange={() => setMode('SPECIFIC_EXAM')}
+                className="accent-black"
+              />
               <span>Specific Exam</span>
             </label>
           </div>
