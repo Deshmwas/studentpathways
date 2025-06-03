@@ -377,14 +377,16 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { DialogDescription } from '@radix-ui/react-dialog';
 import PathwayFormDialog from "@/components/PathwayFormDialog";
-// Type Definitions
 
+// Type Definitions
 type StudentPathway = {
   studentPathwayId?: number;
   studentId: string;
   pathwayId: number;
   startDate: string;
   endDate?: string;
+  isAutomatic?: boolean; // true = system-assigned
+  isOverride?: boolean;  // true = manually changed after auto
 };
 
 type Student = {
@@ -450,21 +452,26 @@ export default function StudentPathwaysPage() {
     ];
 
     const mockStudentPathways: StudentPathway[] = [
-      {
-        studentPathwayId: 1,
-        studentId: 'S001',
-        pathwayId: 1,
-        startDate: '2025-01-01',
-        endDate: '',
-      },
-      {
-        studentPathwayId: 2,
-        studentId: 'S002',
-        pathwayId: 3,
-        startDate: '2025-02-01',
-        endDate: '2025-05-01',
-      },
-    ];
+  {
+    studentPathwayId: 1,
+    studentId: 'S001',
+    pathwayId: 1,
+    startDate: '2025-01-01',
+    endDate: '',
+    isAutomatic: true,
+    isOverride: false,
+  },
+  {
+    studentPathwayId: 2,
+    studentId: 'S002',
+    pathwayId: 3,
+    startDate: '2025-02-01',
+    endDate: '2025-05-01',
+    isAutomatic: false,
+    isOverride: false,
+  },
+];
+
 
     setStudents(mockStudents);
     setPathways(mockPathways);
@@ -472,37 +479,80 @@ export default function StudentPathwaysPage() {
   }
 
   function saveStudentPathway() {
-    if (editingId) {
-      setStudentPathways((prev) =>
-        prev.map((sp) =>
-          sp.studentPathwayId === editingId ? { ...formData, studentPathwayId: editingId } : sp
-        )
-      );
-    } else {
-      const newId = Math.max(0, ...studentPathways.map((sp) => sp.studentPathwayId || 0)) + 1;
-      setStudentPathways((prev) => [...prev, { ...formData, studentPathwayId: newId }]);
-    }
+  const isEditing = !!editingId;
 
-    setFormData({
-      studentId: '',
-      pathwayId: 0,
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: '',
-    });
-    setEditingId(null);
-    setIsOpen(false);
+  const previous = studentPathways.find(sp => sp.studentPathwayId === editingId);
+
+  const updatedData: StudentPathway = {
+    ...formData,
+    isAutomatic: false,
+    isOverride: isEditing && previous?.isAutomatic ? true : false,
+  };
+
+  if (isEditing) {
+    setStudentPathways((prev) =>
+      prev.map((sp) =>
+        sp.studentPathwayId === editingId ? { ...updatedData, studentPathwayId: editingId } : sp
+      )
+    );
+  } else {
+    const newId = Math.max(0, ...studentPathways.map((sp) => sp.studentPathwayId || 0)) + 1;
+    setStudentPathways((prev) => [...prev, { ...updatedData, studentPathwayId: newId }]);
   }
 
+  setFormData({
+    studentId: '',
+    pathwayId: 0,
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: '',
+  });
+  setEditingId(null);
+  setIsOpen(false);
+}
   function startEdit(sp: StudentPathway) {
     setFormData(sp);
     setEditingId(sp.studentPathwayId || null);
     setIsOpen(true);
   }
-
   function assignPathwaysAutomatically() {
-    if (!selectedStudentId) return alert('Please select a student');
-    alert(`Auto-assigned pathway to student ${selectedStudentId} for Term ${term}, Year ${year}`);
+  if (!selectedStudentId) {
+    return alert('Please select a student');
   }
+
+  const student = students.find((s) => s.studentId === selectedStudentId);
+
+  if (!student) {
+    return alert('Student not found');
+  }
+
+  // Apply filter logic
+  const matchesFilters =
+    (!selectedClass || student.class === selectedClass) &&
+    (!selectedStream || student.stream === selectedStream);
+
+  if (!matchesFilters) {
+    return alert('Selected student does not match the class/stream filters.');
+  }
+
+  // Assign a default or filtered pathwayId (you can improve this logic later)
+  const assignedPathwayId = parseInt(selectedPathwayFilter || '1'); // Default to 1 if not selected
+
+  const newId = Math.max(0, ...studentPathways.map((sp) => sp.studentPathwayId || 0)) + 1;
+
+  const newPathway: StudentPathway = {
+    studentPathwayId: newId,
+    studentId: selectedStudentId,
+    pathwayId: assignedPathwayId,
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: '',
+    isAutomatic: true,
+    isOverride: false,
+  };
+
+  setStudentPathways((prev) => [...prev, newPathway]);
+
+  alert(`Auto-assigned pathway to ${student.firstName} ${student.lastName}`);
+}
 
   const filteredPathways = studentPathways.filter((sp) => {
     const student = students.find((s) => s.studentId === sp.studentId);
@@ -518,6 +568,7 @@ export default function StudentPathwaysPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
 
   function computeSummary(studentId: string) {
   const studentRecords = studentPathways.filter(sp => sp.studentId === studentId);
@@ -707,7 +758,7 @@ export default function StudentPathwaysPage() {
 </Dialog>
 
       {/* Table */}
-      <div className="bg-white rounded shadow-md p-4">
+      {/* <div className="bg-white rounded shadow-md p-4">
         <Table>
           <TableHeader>
             <TableRow>
@@ -756,7 +807,94 @@ export default function StudentPathwaysPage() {
               );
             })}
           </TableBody>
-        </Table>
+        </Table> */}
+
+
+  <div className="bg-white rounded shadow-md p-4">
+  <Table>
+    <TableHeader>
+      <TableRow>
+        <TableHead>#</TableHead>
+        <TableHead>Student</TableHead>
+        <TableHead>Pathway</TableHead>
+        <TableHead>Start Date</TableHead>
+        <TableHead>End Date</TableHead>
+        <TableHead>Automatic?</TableHead>
+        <TableHead>Overridden?</TableHead>
+        <TableHead className="text-center">Actions</TableHead>
+      </TableRow>
+    </TableHeader>
+    <TableBody>
+      {paginatedPathways.map((sp, index) => {
+        const student = students.find((s) => s.studentId === sp.studentId);
+        const studentName = student ? `${student.firstName} ${student.lastName}` : 'Unknown';
+        const pathway = pathways.find((p) => p.pathwayId === sp.pathwayId)?.pathwayName || 'Unknown';
+
+        return (
+          <TableRow key={sp.studentPathwayId}>
+            <TableCell>{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
+            <TableCell>{studentName}</TableCell>
+            <TableCell>{pathway}</TableCell>
+            <TableCell>{sp.startDate ? format(new Date(sp.startDate), 'dd MMM yyyy') : '-'}</TableCell>
+            <TableCell>{sp.endDate ? format(new Date(sp.endDate), 'dd MMM yyyy') : '-'}</TableCell>
+
+            <TableCell>
+              {sp.isAutomatic ? (
+                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-green-200 text-green-800">
+                  Yes
+                </span>
+              ) : (
+                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-200 text-gray-600">
+                  No
+                </span>
+              )}
+            </TableCell>
+
+            <TableCell>
+              {sp.isOverride ? (
+                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-200 text-yellow-800">
+                  Yes
+                </span>
+              ) : (
+                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-200 text-gray-600">
+                  No
+                </span>
+              )}
+            </TableCell>
+
+            <TableCell className="text-center">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => startEdit(sp)}>
+                    <Pencil className="mr-2 h-4 w-4" /> Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (confirm('Delete this record?')) {
+                        setStudentPathways((prev) =>
+                          prev.filter((s) => s.studentPathwayId !== sp.studentPathwayId)
+                        );
+                      }
+                    }}
+                  >
+                    <Trash className="mr-2 h-4 w-4" /> Delete
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSummaryStudentId(sp.studentId)}>
+                    <BarChart2 className="mr-2 h-4 w-4" /> View Summary
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </TableCell>
+          </TableRow>
+        );
+      })}
+    </TableBody>
+  </Table>
 
         {/* Pagination Controls */}
         <div className="flex justify-between items-center mt-4">
