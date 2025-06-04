@@ -814,8 +814,8 @@ export default function StudentPathwaysPage() {
         <TableHead>Pathway</TableHead>
         <TableHead>Start Date</TableHead>
         <TableHead>End Date</TableHead>
-        <TableHead>Automatic?</TableHead>
-        <TableHead>Overridden?</TableHead>
+        <TableHead>Automatic</TableHead>
+        <TableHead>Overridden</TableHead>
         <TableHead className="text-center">Actions</TableHead>
       </TableRow>
     </TableHeader>
@@ -839,7 +839,7 @@ export default function StudentPathwaysPage() {
                   Yes
                 </span>
               ) : (
-                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-200 text-gray-600">
+                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-red-200 text-gray-600">
                   No
                 </span>
               )}
@@ -851,7 +851,7 @@ export default function StudentPathwaysPage() {
                   Yes
                 </span>
               ) : (
-                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-200 text-gray-600">
+                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-red-200 text-gray-600">
                   No
                 </span>
               )}
