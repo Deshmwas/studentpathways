@@ -438,7 +438,7 @@ export default function StudentPathwaysPage() {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 15;
 
   // Summary Dialog
   const [summaryStudentId, setSummaryStudentId] = useState<string | null>(null);
@@ -453,9 +453,29 @@ export default function StudentPathwaysPage() {
 
   function fetchAll() {
     const mockStudents: Student[] = [
-      { studentId: 'S001', firstName: 'Alice', lastName: 'Johnson', class: 'Grade 1', stream: 'yellow' },
-      { studentId: 'S002', firstName: 'Bob', lastName: 'Smith', class: 'Grade 2', stream: 'Blue' },
-      { studentId: 'S003', firstName: 'Charlie', lastName: 'Lee', class: 'Grade 3', stream: 'Green' },
+      { studentId: 'S001', firstName: 'Alice', lastName: 'Johnson', class: 'Grade 1', stream: 'Yellow' },
+  { studentId: 'S002', firstName: 'Bob', lastName: 'Smith', class: 'Grade 2', stream: 'Blue' },
+  { studentId: 'S003', firstName: 'Charlie', lastName: 'Lee', class: 'Grade 3', stream: 'Green' },
+  { studentId: 'S004', firstName: 'Diana', lastName: 'Owens', class: 'Grade 1', stream: 'Red' },
+  { studentId: 'S005', firstName: 'Ethan', lastName: 'Kimani', class: 'Grade 2', stream: 'Yellow' },
+  { studentId: 'S006', firstName: 'Faith', lastName: 'Otieno', class: 'Grade 3', stream: 'Blue' },
+  { studentId: 'S007', firstName: 'George', lastName: 'Mwai', class: 'Grade 1', stream: 'Green' },
+  { studentId: 'S008', firstName: 'Hannah', lastName: 'Mwangi', class: 'Grade 2', stream: 'Red' },
+  { studentId: 'S009', firstName: 'Ian', lastName: 'Kariuki', class: 'Grade 3', stream: 'Yellow' },
+  { studentId: 'S010', firstName: 'Jane', lastName: 'Chebet', class: 'Grade 1', stream: 'Blue' },
+  { studentId: 'S011', firstName: 'Kevin', lastName: 'Mutua', class: 'Grade 2', stream: 'Green' },
+  { studentId: 'S012', firstName: 'Lillian', lastName: 'Omondi', class: 'Grade 3', stream: 'Red' },
+  { studentId: 'S013', firstName: 'Michael', lastName: 'Njoroge', class: 'Grade 1', stream: 'Yellow' },
+  { studentId: 'S014', firstName: 'Nina', lastName: 'Achieng', class: 'Grade 2', stream: 'Blue' },
+  { studentId: 'S015', firstName: 'Oscar', lastName: 'Mwende', class: 'Grade 3', stream: 'Green' },
+  { studentId: 'S016', firstName: 'Paula', lastName: 'Otieno', class: 'Grade 1', stream: 'Red' },
+  { studentId: 'S017', firstName: 'Quincy', lastName: 'Kiptoo', class: 'Grade 2', stream: 'Yellow' },
+  { studentId: 'S018', firstName: 'Rachel', lastName: 'Maina', class: 'Grade 3', stream: 'Blue' },
+  { studentId: 'S019', firstName: 'Sam', lastName: 'Wafula', class: 'Grade 1', stream: 'Green' },
+  { studentId: 'S020', firstName: 'Tina', lastName: 'Koech', class: 'Grade 2', stream: 'Red' },
+  { studentId: 'S021', firstName: 'Umar', lastName: 'Ali', class: 'Grade 3', stream: 'Yellow' },
+  { studentId: 'S022', firstName: 'Violet', lastName: 'Mwikali', class: 'Grade 1', stream: 'Blue' },
+  { studentId: 'S023', firstName: 'Wycliffe', lastName: 'Ndungu', class: 'Grade 2', stream: 'Green' }
     ];
 
     const mockPathways: Pathway[] = [
@@ -464,25 +484,30 @@ export default function StudentPathwaysPage() {
       { pathwayId: 3, pathwayName: 'Social Sciences' },
     ];
 
-    const mockStudentPathways: StudentPathway[] = [
-  {
-    studentPathwayId: 1,
-    studentId: 'S001',
-    pathwayId: 1,
-    startDate: '2025-01-01',
-    endDate: '',
-    isAutomatic: true,
-    isOverride: false,
-  },
-  {
-    studentPathwayId: 2,
-    studentId: 'S002',
-    pathwayId: 3,
-    startDate: '2025-02-01',
-    endDate: '2025-05-01',
-    isAutomatic: false,
-    isOverride: false,
-  },
+  const mockStudentPathways: StudentPathway[] = [
+  { studentPathwayId: 1, studentId: 'S001', pathwayId: 1, startDate: '2025-01-01', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 2, studentId: 'S002', pathwayId: 3, startDate: '2025-02-01', endDate: '2025-05-01', isAutomatic: false, isOverride: false },
+  { studentPathwayId: 3, studentId: 'S003', pathwayId: 2, startDate: '2025-01-15', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 4, studentId: 'S004', pathwayId: 1, startDate: '2025-03-01', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 5, studentId: 'S005', pathwayId: 2, startDate: '2025-02-10', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 6, studentId: 'S006', pathwayId: 3, startDate: '2025-01-20', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 7, studentId: 'S007', pathwayId: 1, startDate: '2025-02-05', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 8, studentId: 'S008', pathwayId: 3, startDate: '2025-03-10', endDate: '2025-05-10', isAutomatic: false, isOverride: true },
+  { studentPathwayId: 9, studentId: 'S009', pathwayId: 2, startDate: '2025-01-25', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 10, studentId: 'S010', pathwayId: 1, startDate: '2025-01-12', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 11, studentId: 'S011', pathwayId: 2, startDate: '2025-03-15', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 12, studentId: 'S012', pathwayId: 3, startDate: '2025-04-01', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 13, studentId: 'S013', pathwayId: 1, startDate: '2025-02-18', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 14, studentId: 'S014', pathwayId: 2, startDate: '2025-01-28', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 15, studentId: 'S015', pathwayId: 3, startDate: '2025-03-22', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 16, studentId: 'S016', pathwayId: 1, startDate: '2025-04-10', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 17, studentId: 'S017', pathwayId: 2, startDate: '2025-01-30', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 18, studentId: 'S018', pathwayId: 3, startDate: '2025-02-14', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 19, studentId: 'S019', pathwayId: 1, startDate: '2025-01-05', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 20, studentId: 'S020', pathwayId: 2, startDate: '2025-03-08', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 21, studentId: 'S021', pathwayId: 3, startDate: '2025-01-17', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 22, studentId: 'S022', pathwayId: 1, startDate: '2025-04-02', endDate: '', isAutomatic: true, isOverride: false },
+  { studentPathwayId: 23, studentId: 'S023', pathwayId: 2, startDate: '2025-02-21', endDate: '', isAutomatic: true, isOverride: false }
 ];
 
 
