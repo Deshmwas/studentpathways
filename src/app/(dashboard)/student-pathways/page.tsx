@@ -836,6 +836,7 @@ export default function StudentPathwaysPage() {
       <TableRow>
         <TableHead>#</TableHead>
         <TableHead>Student</TableHead>
+        <TableHead>Class</TableHead>
         <TableHead>Pathway</TableHead>
         <TableHead>Start Date</TableHead>
         <TableHead>End Date</TableHead>
@@ -848,12 +849,14 @@ export default function StudentPathwaysPage() {
       {paginatedPathways.map((sp, index) => {
         const student = students.find((s) => s.studentId === sp.studentId);
         const studentName = student ? `${student.firstName} ${student.lastName}` : 'Unknown';
+        const studentClass = student?.class || 'Unknown';  
         const pathway = pathways.find((p) => p.pathwayId === sp.pathwayId)?.pathwayName || 'Unknown';
 
         return (
           <TableRow key={sp.studentPathwayId}>
             <TableCell>{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
             <TableCell>{studentName}</TableCell>
+            <TableCell>{studentClass}</TableCell>
             <TableCell>{pathway}</TableCell>
             <TableCell>{sp.startDate ? format(new Date(sp.startDate), 'dd MMM yyyy') : '-'}</TableCell>
             <TableCell>{sp.endDate ? format(new Date(sp.endDate), 'dd MMM yyyy') : '-'}</TableCell>
@@ -915,6 +918,8 @@ export default function StudentPathwaysPage() {
       })}
     </TableBody>
   </Table>
+
+
          {/* Pagination Controls */}
 <Pagination className="mt-4">
   <PaginationContent>
