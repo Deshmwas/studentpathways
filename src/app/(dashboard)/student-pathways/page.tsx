@@ -479,7 +479,7 @@ export default function StudentPathwaysPage() {
     ];
 
     const mockPathways: Pathway[] = [
-      { pathwayId: 1, pathwayName: 'Science, Technology, Engineering, and Mathematics (STEM)' },
+      { pathwayId: 1, pathwayName: 'STEM' },
       { pathwayId: 2, pathwayName: 'Arts and Sports Science' },
       { pathwayId: 3, pathwayName: 'Social Sciences' },
     ];
