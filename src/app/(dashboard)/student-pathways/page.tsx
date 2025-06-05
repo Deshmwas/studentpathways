@@ -342,24 +342,6 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { format } from 'date-fns';
-import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from '@/components/ui/table';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -368,28 +350,11 @@ import {
   SelectContent,
   SelectItem,
 } from '@/components/ui/select';
-import { MoreHorizontal, Pencil, Trash, BarChart2 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { DialogDescription } from '@radix-ui/react-dialog';
 import PathwayFormDialog from "@/components/PathwayFormDialog";
+import SummaryDialog from "@/components/SummaryDialog";
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { FileSpreadsheet } from 'lucide-react'; 
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationEllipsis,
-} from "@/components/ui/pagination";
-
+import { PathwayTable } from "@/components/PathwayTable";
 
 // Type Definitions
 type StudentPathway = {
@@ -511,6 +476,8 @@ export default function StudentPathwaysPage() {
 ];
 
 
+
+
     setStudents(mockStudents);
     setPathways(mockPathways);
     setStudentPathways(mockStudentPathways);
@@ -602,10 +569,16 @@ export default function StudentPathwaysPage() {
     );
   });
 
-  const paginatedPathways = filteredPathways.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const paginatedPathways = filteredPathways
+    .filter((sp) => sp.studentPathwayId !== undefined)
+    .map((sp) => ({
+      ...sp,
+      studentPathwayId: sp.studentPathwayId as number,
+    }))
+    .slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
 
   function exportToExcel() {
   const exportData = paginatedPathways.map((sp) => {
@@ -731,269 +704,41 @@ export default function StudentPathwaysPage() {
 
         <Button onClick={assignPathwaysAutomatically}>Auto Assign Pathways</Button>
       </div>
-      {/* Summary Dialog */}
-     <Dialog open={!!summaryStudentId} onOpenChange={(open) => setSummaryStudentId(open ? summaryStudentId : null)}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Student Pathway Summary</DialogTitle>
-      <DialogDescription>
-        Summary details for the selected student.
-      </DialogDescription>
 
-      {summaryStudentId && (() => {
-        const student = students.find(s => s.studentId === summaryStudentId);
-        const summary = computeSummary(summaryStudentId);
-        return (
-          <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-            <p><strong>Student:</strong> {student?.firstName} {student?.lastName}</p>
-            <p><strong>Average Duration:</strong> {summary.averageDurationDays} days</p>
-            <p><strong>Best Performing Pathway:</strong> {summary.bestPathwayName}</p>
-          </div>
-        );
-      })()}
-    </DialogHeader>
+{summaryStudentId && (
+  <SummaryDialog
+    summaryStudentId={summaryStudentId}
+    students={students}
+    computeSummary={computeSummary}
+    onClose={() => setSummaryStudentId(null)}
+  />
+)}
 
-    <DialogFooter>
-      <Button onClick={() => setSummaryStudentId(null)}>Close</Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-
-       <Dialog open={isOpen} onOpenChange={(open) => {
-  if (!open) {
-    setIsOpen(false);
-    setFormData({
-      studentId: '',
-      pathwayId: 0,
-      startDate: new Date().toISOString().split('T')[0],
-      endDate: '',
-    });
-    setEditingId(null);
-  }
-}}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>{editingId ? 'Edit Pathway Assignment' : 'Add Pathway Assignment'}</DialogTitle>
-    </DialogHeader>
-    <div className="space-y-4">
-      <div>
-        <Label>Student</Label>
-        <Select value={formData.studentId} onValueChange={(val) => setFormData({ ...formData, studentId: val })}>
-          <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
-          <SelectContent>
-            {students.map((s) => (
-              <SelectItem key={s.studentId} value={s.studentId}>
-                {s.firstName} {s.lastName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label>Pathway</Label>
-        <Select value={formData.pathwayId.toString()} onValueChange={(val) => setFormData({ ...formData, pathwayId: parseInt(val) })}>
-          <SelectTrigger><SelectValue placeholder="Select pathway" /></SelectTrigger>
-          <SelectContent>
-            {pathways.map((p) => (
-              <SelectItem key={p.pathwayId} value={p.pathwayId.toString()}>
-                {p.pathwayName}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div>
-        <Label>Start Date</Label>
-        <Input type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} />
-      </div>
-      <div>
-        <Label>End Date</Label>
-        <Input type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} />
-      </div>
-    </div>
-    <DialogFooter>
-      <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
-      <Button onClick={saveStudentPathway}>{editingId ? 'Update' : 'Add'}</Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
-
-  {/* TABLE */}
-  <div className="bg-white rounded shadow-md p-4">
-
-    <div className="flex justify-between items-center mb-2">
-    <h2 className="text-lg font-semibold">Student Pathways</h2>
-    <button
-      onClick={exportToExcel}
-      title="Export to Excel"
-      className="text-green-600 hover:text-green-800 transition-colors"
-    >
-      <FileSpreadsheet className="w-5 h-5" />
-    </button>
-  </div>
-  <Table>
-    <TableHeader>
-      <TableRow>
-        <TableHead>#</TableHead>
-        <TableHead>Student</TableHead>
-        <TableHead>Class</TableHead>
-        <TableHead>Pathway</TableHead>
-        <TableHead>Start Date</TableHead>
-        <TableHead>End Date</TableHead>
-        <TableHead>Automatic</TableHead>
-        <TableHead>Overridden</TableHead>
-        <TableHead className="text-center">Actions</TableHead>
-      </TableRow>
-    </TableHeader>
-    <TableBody>
-      {paginatedPathways.map((sp, index) => {
-        const student = students.find((s) => s.studentId === sp.studentId);
-        const studentName = student ? `${student.firstName} ${student.lastName}` : 'Unknown';
-        const studentClass = student?.class || 'Unknown';  
-        const pathway = pathways.find((p) => p.pathwayId === sp.pathwayId)?.pathwayName || 'Unknown';
-
-        return (
-          <TableRow key={sp.studentPathwayId}>
-            <TableCell>{(currentPage - 1) * itemsPerPage + index + 1}</TableCell>
-            <TableCell>{studentName}</TableCell>
-            <TableCell>{studentClass}</TableCell>
-            <TableCell>{pathway}</TableCell>
-            <TableCell>{sp.startDate ? format(new Date(sp.startDate), 'dd MMM yyyy') : '-'}</TableCell>
-            <TableCell>{sp.endDate ? format(new Date(sp.endDate), 'dd MMM yyyy') : '-'}</TableCell>
-
-            <TableCell>
-              {sp.isAutomatic ? (
-                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-green-200 text-green-800">
-                  Yes
-                </span>
-              ) : (
-                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-red-200 text-gray-600">
-                  No
-                </span>
-              )}
-            </TableCell>
-
-            <TableCell>
-              {sp.isOverride ? (
-                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-200 text-yellow-800">
-                  Yes
-                </span>
-              ) : (
-                <span className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full bg-red-200 text-gray-600">
-                  No
-                </span>
-              )}
-            </TableCell>
-
-            <TableCell className="text-center">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="h-8 w-8 p-0">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => startEdit(sp)}>
-                    <Pencil className="mr-2 h-4 w-4" /> Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      if (confirm('Delete this record?')) {
-                        setStudentPathways((prev) =>
-                          prev.filter((s) => s.studentPathwayId !== sp.studentPathwayId)
-                        );
-                      }
-                    }}
-                  >
-                    <Trash className="mr-2 h-4 w-4" /> Delete
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSummaryStudentId(sp.studentId)}>
-                    <BarChart2 className="mr-2 h-4 w-4" /> View Summary
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </TableCell>
-          </TableRow>
-        );
-      })}
-    </TableBody>
-  </Table>
-
-
-         {/* Pagination Controls */}
-<Pagination className="mt-4">
-  <PaginationContent>
-    <PaginationItem>
-      <PaginationPrevious
-        href="#"
-        onClick={(e) => {
-          e.preventDefault();
-          setCurrentPage((prev) => Math.max(prev - 1, 1));
-        }}
-        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
-      />
-    </PaginationItem>
-
-    {/* Show 3 page numbers: previous, current, next */}
-    {currentPage > 1 && (
-      <PaginationItem>
-        <PaginationLink
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setCurrentPage(currentPage - 1);
-          }}
-        >
-          {currentPage - 1}
-        </PaginationLink>
-      </PaginationItem>
-    )}
-
-    <PaginationItem>
-      <PaginationLink href="#" isActive>
-        {currentPage}
-      </PaginationLink>
-    </PaginationItem>
-
-    {currentPage < Math.ceil(filteredPathways.length / itemsPerPage) && (
-      <PaginationItem>
-        <PaginationLink
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setCurrentPage(currentPage + 1);
-          }}
-        >
-          {currentPage + 1}
-        </PaginationLink>
-      </PaginationItem>
-    )}
-
-    {currentPage + 1 < Math.ceil(filteredPathways.length / itemsPerPage) && (
-      <PaginationItem>
-        <PaginationEllipsis />
-      </PaginationItem>
-    )}
-
-    <PaginationItem>
-      <PaginationNext
-        href="#"
-        onClick={(e) => {
-          e.preventDefault();
-          setCurrentPage((prev) =>
-            Math.min(prev + 1, Math.ceil(filteredPathways.length / itemsPerPage))
-          );
-        }}
-        className={
-          currentPage === Math.ceil(filteredPathways.length / itemsPerPage)
-            ? "pointer-events-none opacity-50"
-            : ""
-        }
-      />
-    </PaginationItem>
-  </PaginationContent>
-</Pagination>
-      </div>
+<PathwayFormDialog
+  isOpen={isOpen}
+  setIsOpen={setIsOpen}
+  formData={formData}
+  setFormData={setFormData}
+  saveStudentPathway={saveStudentPathway}
+  editingId={editingId}
+  setEditingId={setEditingId}
+  students={students}
+  pathways={pathways}
+/>
+<PathwayTable
+  paginatedPathways={paginatedPathways}
+  students={students}
+  pathways={pathways}
+  currentPage={currentPage}
+  setCurrentPage={setCurrentPage}
+  filteredPathwaysLength={filteredPathways.length}
+  itemsPerPage={itemsPerPage}
+  exportToExcel={exportToExcel}
+  onEdit={startEdit}
+  onDelete={(id) => {
+  }}
+  onViewSummary={(id) => setSummaryStudentId(String(id))}
+/>   
     </div>
   );
 }
